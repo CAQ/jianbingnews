@@ -33,7 +33,7 @@ def postarticle(title, link, content):
     conn = urllib2.urlopen(req)
 
     # post
-    postit(title, link + '\n\n' + content)
+    postit(title, title + '\n\n' + link + '\n\n' + content)
 
     # logout
     req = urllib2.Request('http://m.newsmth.net/user/logout', post_data)
