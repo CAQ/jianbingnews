@@ -33,6 +33,10 @@ def postarticle(title, link, content):
     conn = urllib2.urlopen(req)
 
     # post
+    if type(title) is str:
+        title = title.decode('utf-8')
+    if type(content) is str:
+        content = content.decode('utf-8')
     postit(title, title + '\n\n' + link + '\n\n' + content)
 
     # logout

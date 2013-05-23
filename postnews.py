@@ -17,23 +17,24 @@ f.close()
 # read all the links, find the minimum one that 
 # hasn't been posted (greater than lasttimestamp)
 mintimestamp = -1
-linkinfo = [] # [link, waplink]
+linkinfo = [] # [link, waplink, title]
 f = open('links.txt')
 for line in f:
-    link, timestamp, waplink = line.strip().split('\t')
+    link, timestamp, waplink, title = line.strip().split('\t')
     timestamp = int(timestamp)
     if timestamp <= lasttimestamp:
         continue
     if mintimestamp == -1 or timestamp < mintimestamp:
         mintimestamp = timestamp
-        linkinfo = [link, waplink]
+        linkinfo = [link, waplink, title]
 f.close()
 
 # anything new exists?
 if mintimestamp > 0:
     # we've got a new article, post it
     html = urllib.urlopen(linkinfo[1]).read()
-    title = Document(html).short_title()
+    #title = Document(html).short_title() # this short_title isn't always correct
+    title = linkinfo[2] # use the title from the search list instead
     article = Document(html).summary()
     soup = BeautifulSoup(article)
     texts = soup.find_all(text=True)

@@ -14,7 +14,7 @@ import time
 links = []
 f = open('links.txt')
 for line in f:
-    link, timestamp, waplink = line.strip().split('\t')
+    link, timestamp, waplink, title = line.strip().split('\t')
     links.append(link)
 f.close()
 
@@ -33,8 +33,9 @@ for item in soup.find_all('div', class_='list-item'):
     querystr = urlparse.urlparse(waplink).query
     query = urlparse.parse_qs(querystr)
     link = query['url'][0]
+    title = item.find('a').text
     if not link in links:
-        fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink]) + '\n')
+        fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title]) + '\n')
     count += 1
 
 fw.close()
