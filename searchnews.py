@@ -34,6 +34,8 @@ for item in soup.find_all('div', class_='list-item'):
     query = urlparse.parse_qs(querystr)
     link = query['url'][0]
     title = item.find('a').text
+    if type(title) is unicode:
+        title = title.encode('utf-8')
     if not link in links:
         fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title]) + '\n')
     count += 1
