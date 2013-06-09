@@ -44,7 +44,8 @@ if mintimestamp > 0:
         if len(text) > 0:
             poststr += text + '\n\n'
     if len(poststr) > 0:
-        postarticle(title, linkinfo[0], poststr)
+        if title.find('杨光') < 0 and title.find('女童') < 0:
+            postarticle(title, linkinfo[0], poststr)
 
     # then update the lasttimestamp
     fw = open('lasttimestamp.txt', 'w')

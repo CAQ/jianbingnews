@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import urllib, urlparse
 import time
 
+keywords = ['煎饼', '清华 计算机系']
+
 # read the previous links
 # format of the lines: <link> \t <timestamp>
 links = []
@@ -19,26 +21,27 @@ for line in f:
 f.close()
 
 # search the news, typically 10 results
-base = 'http://wap.sogou.com'
-url = base + '/news/newsSearchResult.jsp?sort=0&keyword=%E7%85%8E%E9%A5%BC'
-soup = BeautifulSoup(urllib.urlopen(url).read())
-timestamp = int(time.time())
-count = 0
+for keyword in keywords:
+    base = 'http://wap.sogou.com'
+    url = base + '/news/newsSearchResult.jsp?sort=0&keyword=' + urllib.quote(keyword)
+    soup = BeautifulSoup(urllib.urlopen(url).read())
+    timestamp = int(time.time())
+    count = 0
 
-# if the news is new, store it
-fw = open('links.txt', 'a')
+    # if the news is new, store it
+    fw = open('links.txt', 'a')
 
-for item in soup.find_all('div', class_='list-item'):
-    waplink = base + item.find('a').get('href')
-    querystr = urlparse.urlparse(waplink).query
-    query = urlparse.parse_qs(querystr)
-    link = query['url'][0]
-    title = item.find('a').text
-    if type(title) is unicode:
-        title = title.encode('utf-8')
-    if not link in links:
-        fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title]) + '\n')
-    count += 1
+    for item in soup.find_all('div', class_='list-item'):
+        waplink = base + item.find('a').get('href')
+        querystr = urlparse.urlparse(waplink).query
+        query = urlparse.parse_qs(querystr)
+        link = query['url'][0]
+        title = item.find('a').text
+        if type(title) is unicode:
+            title = title.encode('utf-8')
+        if not link in links:
+            fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title]) + '\n')
+        count += 1
 
-fw.close()
+    fw.close()
 
