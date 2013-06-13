@@ -3,5 +3,7 @@ beautifulsoup4-4.2.0/
 python-goose-master.zip
 python-readability-master.zip
 python-readability-master/
+pymmseg-cpp-src-1.0.2.tar.gz
+pymmseg/
 *.pyc
 smthdcst.config

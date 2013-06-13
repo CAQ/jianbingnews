@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
-search news from wap.sogou.com with the keyword 煎饼
+search news from wap.sogou.com with some keywords
 and store the new ones into links.txt
 by CAQ
-May 2013
+May - Jun 2013
 '''
 from bs4 import BeautifulSoup
 import urllib, urlparse
@@ -12,11 +12,11 @@ import time
 keywords = ['煎饼', '清华 计算机系']
 
 # read the previous links
-# format of the lines: <link> \t <timestamp>
+# format of the lines: <original link> \t <timestamp> \t <sogou wap link> \t <article title> \t <posted>
 links = []
 f = open('links.txt')
 for line in f:
-    link, timestamp, waplink, title = line.strip().split('\t')
+    link, timestamp, waplink, title, posted = line.strip().split('\t')
     links.append(link)
 f.close()
 
@@ -40,7 +40,7 @@ for keyword in keywords:
         if type(title) is unicode:
             title = title.encode('utf-8')
         if not link in links:
-            fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title]) + '\n')
+            fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title, '0']) + '\n')
         count += 1
 
     fw.close()

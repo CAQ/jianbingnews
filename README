@@ -1,13 +1,13 @@
 Jianbing (煎饼) News Post Machine
 
-Automatically post news of "煎饼" to newsmth.net
+Automatically post news of "煎饼" etc. to newsmth.net
 
 Methodology:
 (1) Crawl news of "煎饼" from Sogou News search (WAP version), store them.
 (2) Pick a new article from the storage, and post it in the board DCST.THU of newsmth.net
 
-Required 3rd-party libraries: beautifulsoup4 (4.2.0), python readability
+Required 3rd-party libraries: beautifulsoup4 (4.2.0), python readability, pymmseg
 
 You need to create an "smthdcst.config" to store your username and password for newsmth.net, separated by \t.
 
-License: Using these files meaning you automatically waive the right of being 1481-ed.
+License: Using these files means that you automatically waive the right of being 1481-ed.
