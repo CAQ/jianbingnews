@@ -85,6 +85,8 @@ for line in f:
     timestamp = int(timestamp)
     if timestamp <= lasttimestamp:
         continue
+    if link.find('www.zzit.com.cn') >= 0:
+        continue
     # titlesegs = ngram(title, 2)
     titlesegs = wordseg(title)
     repeated = False
@@ -114,8 +116,7 @@ if mintimestamp > 0:
         text = text.strip()
         if len(text) > 0:
             poststr += text + '\n\n'
-    if len(poststr) > 0:
-        postarticle(title, linkinfo[0], poststr)
+    postarticle(title, linkinfo[0], poststr)
 
     # then update the lasttimestamp
     fw = open('lasttimestamp.txt', 'w')
