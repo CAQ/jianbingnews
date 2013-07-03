@@ -4,22 +4,22 @@ post an article to newsmth.net
 '''
 import urllib, urllib2
 import cookielib
-#import time
+import time
 
-def postit(title, content):
+def postit(board, title, content):
     if type(title) is unicode:
         title = title.encode('utf-8')
     if type(content) is unicode:
         content = content.encode('utf-8')
 
     post_data = urllib.urlencode({'subject': title, 'content': content})
-    req = urllib2.Request('http://m.newsmth.net/article/DCST.THU/post', post_data)
+    req = urllib2.Request('http://m.newsmth.net/article/' + board + '/post', post_data)
     urllib2.urlopen(req)
-    #time.sleep(30)
+    time.sleep(10)
 
-def postarticle(title, link, content):
+def postarticle(board, title, link, content):
     # read the username and password from config file
-    f = open('smthdcst.config')
+    f = open('smth.config')
     usr, pwd = f.readline().strip().split('\t')
     f.close()
 
@@ -31,13 +31,14 @@ def postarticle(title, link, content):
     urllib2.install_opener(opener)
     req = urllib2.Request('http://m.newsmth.net/user/login', post_data)
     conn = urllib2.urlopen(req)
+    time.sleep(5)
 
     # post
     if type(title) is str:
         title = title.decode('utf-8')
     if type(content) is str:
         content = content.decode('utf-8')
-    postit(title, title + '\n\n' + link + '\n\n' + content)
+    postit(board, title, title + '\n\n' + link + '\n\n' + content)
 
     # logout
     req = urllib2.Request('http://m.newsmth.net/user/logout', post_data)

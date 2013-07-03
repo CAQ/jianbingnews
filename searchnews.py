@@ -9,14 +9,14 @@ from bs4 import BeautifulSoup
 import urllib, urlparse
 import time
 
-keywords = ['煎饼', '清华 计算机系']
+keywords = ['煎饼', '清华 计算机系', '清华 深研院']
 
 # read the previous links
-# format of the lines: <original link> \t <timestamp> \t <sogou wap link> \t <article title> \t <posted>
+# format of the lines: <keyword> \t <original link> \t <timestamp> \t <sogou wap link> \t <article title> \t <posted>
 links = []
 f = open('links.txt')
 for line in f:
-    link, timestamp, waplink, title, posted = line.strip().split('\t')
+    keyword, link, timestamp, waplink, title, posted = line.strip().split('\t')
     links.append(link)
 f.close()
 
@@ -40,7 +40,7 @@ for keyword in keywords:
         if type(title) is unicode:
             title = title.encode('utf-8')
         if not link in links:
-            fw.write('\t'.join([link, str(timestamp * 1000 + (900 - count)), waplink, title, '0']) + '\n')
+            fw.write('\t'.join([keyword, link, str(timestamp * 1000 + (900 - count)), waplink, title, '0']) + '\n')
         count += 1
 
     fw.close()

@@ -57,53 +57,73 @@ def cossim(d1, d2):
         s2 += d2[k] * d2[k]
     return s0 / math.sqrt(s1) / math.sqrt(s2)
 
+
+jobs = {} # multiple jobs: posting in more than one boards a time
+
 # read the latest timestamp we've posted previously
+# <board> \t <keyword-1> \t <keyword-2> \t ... \t <keyword-n> \t <last timestamp>
 f = open('lasttimestamp.txt')
-lasttimestamp = int(f.readline())
-f.close()
-
-# read the first scan to gather the titles posted
-postedtitles = []
-f = open('links.txt')
 for line in f:
-    link, timestamp, waplink, title, posted = line.strip().split('\t')
-    if posted == '1': # find similar titles against the posted ones
-        # postedtitles.append(ngram(title, 2))
-        postedtitles.append(wordseg(title))
+    board = line[ : line.find('\t')]
+    lasttimestamp = int(line[line.rfind('\t') + 1 : ])
+    jobs[board] = [line[line.find('\t') + 1 : line.rfind('\t')], lasttimestamp]
 f.close()
 
-# read all the links, find the minimum one that 
-# hasn't been posted (greater than lasttimestamp), nor repeated.
-# meanwhile, store all the links for output later
-linklines = []
-mintimestamp = -1
-linkinfo = []
-f = open('links.txt')
-for line in f:
-    linklines.append(line)
-    link, timestamp, waplink, title, posted = line.strip().split('\t')
-    timestamp = int(timestamp)
-    if timestamp <= lasttimestamp:
+# now do each job
+for board in jobs:
+    if board == 'DCST.THU':
         continue
-    if link.find('www.zzit.com.cn') >= 0:
-        continue
-    # titlesegs = ngram(title, 2)
-    titlesegs = wordseg(title)
-    repeated = False
-    for postedseg in postedtitles:
-        c = cossim(postedseg, titlesegs)
-        if c > 0.5:
-            repeated = True
-            break
-    if repeated:
-        continue
-    if mintimestamp == -1 or timestamp < mintimestamp:
-        mintimestamp = timestamp
-        linkinfo = [link, waplink, title, posted]
-f.close()
+    lasttimestamp = jobs[board][1]
+    jobkeywords = jobs[board][0].strip().split('\t')
 
-# anything new exists?
-if mintimestamp > 0:
+    # read the first scan to gather the titles posted
+    postedtitles = []
+    f = open('links.txt')
+    for line in f:
+        keyword, link, timestamp, waplink, title, posted = line.strip().split('\t')
+        if keyword not in jobkeywords:
+            continue
+        if posted == '1': # find similar titles against the posted ones
+            # postedtitles.append(ngram(title, 2))
+            postedtitles.append(wordseg(title))
+    f.close()
+
+    # read all the links, find the minimum one that 
+    # hasn't been posted (greater than lasttimestamp), nor repeated.
+    # meanwhile, store all the links for output later
+    linklines = []
+    mintimestamp = -1
+    linkinfo = []
+    f = open('links.txt')
+    for line in f:
+        linklines.append(line)
+        keyword, link, timestamp, waplink, title, posted = line.strip().split('\t')
+        if keyword not in jobkeywords:
+            continue
+        timestamp = int(timestamp)
+        if timestamp <= lasttimestamp:
+            continue
+        if link.find('www.zzit.com.cn') >= 0: # a spam site
+            continue
+        # titlesegs = ngram(title, 2)
+        titlesegs = wordseg(title)
+        repeated = False
+        for postedseg in postedtitles:
+            c = cossim(postedseg, titlesegs)
+            if c > 0.5:
+                repeated = True
+                break
+        if repeated:
+            continue
+        if mintimestamp == -1 or timestamp < mintimestamp:
+            mintimestamp = timestamp
+            linkinfo = [link, waplink, title, posted]
+    f.close()
+
+    # anything new exists?
+    if mintimestamp <= 0:
+        continue
+
     # we've got a new article, post it
     html = urllib.urlopen(linkinfo[1]).read()
     #title = Document(html).short_title() # this short_title isn't always correct
@@ -116,12 +136,10 @@ if mintimestamp > 0:
         text = text.strip()
         if len(text) > 0:
             poststr += text + '\n\n'
-    postarticle(title, linkinfo[0], poststr)
+    postarticle(board, title, linkinfo[0], poststr)
 
     # then update the lasttimestamp
-    fw = open('lasttimestamp.txt', 'w')
-    fw.write(str(mintimestamp))
-    fw.close()
+    jobs[board][1] = mintimestamp
 
     # also update link.txt to mark a new "posted"
     fw = open('links.txt', 'w')
@@ -131,3 +149,10 @@ if mintimestamp > 0:
         else:
             fw.write(line[0 : -2] + '1\n')
     fw.close()
+
+# finally, update all the lasttimestamps of the boards
+fw = open('lasttimestamp.txt', 'w')
+for board in jobs:
+    fw.write('\t'.join([board, jobs[board][0], str(jobs[board][1])]) + '\n')
+fw.close()
+
