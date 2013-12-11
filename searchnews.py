@@ -40,7 +40,11 @@ for keyword in keywords:
         if type(title) is unicode:
             title = title.encode('utf-8')
         if not link in links:
-            fw.write('\t'.join([keyword, link, str(timestamp * 1000 + (900 - count)), waplink, title, '0']) + '\n')
+            try:
+                writestr = '\t'.join([keyword, link.encode('utf-8'), str(timestamp * 1000 + (900 - count)), waplink.encode('utf-8'), title, '0'])
+                fw.write(writestr + '\n')
+            except:
+                pass
         count += 1
 
     fw.close()

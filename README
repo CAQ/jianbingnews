@@ -7,6 +7,8 @@ Methodology:
 (2) Pick a new article from the storage, and post it in the board DCST.THU of newsmth.net
 
 Required 3rd-party libraries: beautifulsoup4 (4.2.0), python readability, pymmseg
+http://www.crummy.com/software/BeautifulSoup/bs4/download/4.2/beautifulsoup4-4.2.0.tar.gz
+https://github.com/buriy/python-readability
 
 You need to create an "smthdcst.config" to store your username and password for newsmth.net, separated by \t.
 

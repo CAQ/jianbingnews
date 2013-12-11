@@ -13,11 +13,18 @@ def postit(board, title, content):
         content = content.encode('utf-8')
 
     post_data = urllib.urlencode({'subject': title, 'content': content})
-    req = urllib2.Request('http://m.newsmth.net/article/' + board + '/post', post_data)
-    urllib2.urlopen(req)
-    time.sleep(10)
+    posted = False
+    try:
+        req = urllib2.Request('http://m.newsmth.net/article/' + board + '/post', post_data)
+        urllib2.urlopen(req)
+        posted = True
+        time.sleep(5)
+    except:
+        pass
+    return posted
 
 def postarticle(board, title, link, content):
+    posted = False
     # read the username and password from config file
     f = open('smth.config')
     usr, pwd = f.readline().strip().split('\t')
@@ -38,9 +45,15 @@ def postarticle(board, title, link, content):
         title = title.decode('utf-8')
     if type(content) is str:
         content = content.decode('utf-8')
-    postit(board, title, title + '\n\n' + link + '\n\n' + content)
+    posted = postit(board, title, title + '\n\n' + link + '\n\n' + content)
 
     # logout
-    req = urllib2.Request('http://m.newsmth.net/user/logout', post_data)
-    conn = urllib2.urlopen(req)
+    try:
+        req = urllib2.Request('http://m.newsmth.net/user/logout', post_data)
+        conn = urllib2.urlopen(req)
+        time.sleep(5)
+    except:
+        pass
+
+    return posted
 

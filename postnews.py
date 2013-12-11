@@ -4,13 +4,17 @@ post a new article (determined by lasttimestamp.txt) from links.txt
 by CAQ
 May 2013
 '''
-from readability.readability import Document
+#from readability.readability import Document
+import html2text
 from bs4 import BeautifulSoup
 import urllib, math, re
 from postsmth import postarticle
-from pymmseg import mmseg
+#from pymmseg import mmseg
 
-mmseg.dict_load_defaults()
+#mmseg.dict_load_defaults()
+h2t = html2text.HTML2Text()
+h2t.ignore_links = True
+h2t.ignore_images = True
 
 # word segmentation using mmseg
 def wordseg(text):
@@ -71,8 +75,6 @@ f.close()
 
 # now do each job
 for board in jobs:
-    if board == 'DCST.THU':
-        continue
     lasttimestamp = jobs[board][1]
     jobkeywords = jobs[board][0].strip().split('\t')
 
@@ -84,8 +86,8 @@ for board in jobs:
         if keyword not in jobkeywords:
             continue
         if posted == '1': # find similar titles against the posted ones
-            # postedtitles.append(ngram(title, 2))
-            postedtitles.append(wordseg(title))
+            postedtitles.append(ngram(title, 2))
+            # postedtitles.append(wordseg(title))
     f.close()
 
     # read all the links, find the minimum one that 
@@ -105,12 +107,12 @@ for board in jobs:
             continue
         if link.find('www.zzit.com.cn') >= 0: # a spam site
             continue
-        # titlesegs = ngram(title, 2)
-        titlesegs = wordseg(title)
+        titlesegs = ngram(title, 2)
+        # titlesegs = wordseg(title)
         repeated = False
         for postedseg in postedtitles:
             c = cossim(postedseg, titlesegs)
-            if c > 0.5:
+            if c > 0.8:
                 repeated = True
                 break
         if repeated:
@@ -128,27 +130,36 @@ for board in jobs:
     html = urllib.urlopen(linkinfo[1]).read()
     #title = Document(html).short_title() # this short_title isn't always correct
     title = linkinfo[2] # use the title from the search list instead
-    article = Document(html).summary()
-    soup = BeautifulSoup(article)
-    texts = soup.find_all(text=True)
+    #article = Document(html).summary()
+    #soup = BeautifulSoup(article)
+    #texts = soup.find_all(text=True)
+    texts = ''
+    texts = h2t.handle(html.decode('utf-8')).split('\n')
     poststr = ''
     for text in texts:
         text = text.strip()
         if len(text) > 0:
             poststr += text + '\n\n'
-    postarticle(board, title, linkinfo[0], poststr)
 
-    # then update the lasttimestamp
-    jobs[board][1] = mintimestamp
+    # remove the bottom part
+    for adsstr in [u'\n## 热门推荐\n', u'\n## 相关搜索\n', u'\n相关阅读\n']:
+        adspos = poststr.rfind(adsstr)
+        if adspos > 0:
+            #print 'Found', adsstr.strip()
+            poststr = poststr[0 : adspos]
 
-    # also update link.txt to mark a new "posted"
-    fw = open('links.txt', 'w')
-    for line in linklines:
-        if line.find(linkinfo[0] + '\t') != 0:
-            fw.write(line)
-        else:
-            fw.write(line[0 : -2] + '1\n')
-    fw.close()
+    if postarticle(board, title, linkinfo[0], poststr):
+        # then update the lasttimestamp
+        jobs[board][1] = mintimestamp
+
+        # also update link.txt to mark a new "posted"
+        fw = open('links.txt', 'w')
+        for line in linklines:
+            if line.find('\t' + linkinfo[0] + '\t') < 0:
+                fw.write(line)
+            else:
+                fw.write(line[0 : -2] + '1\n')
+        fw.close()
 
 # finally, update all the lasttimestamps of the boards
 fw = open('lasttimestamp.txt', 'w')
