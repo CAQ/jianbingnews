@@ -7,8 +7,8 @@ May 2013
 #from readability.readability import Document
 import html2text
 from bs4 import BeautifulSoup
-import urllib, math, re
-from postsmth import postarticle
+import urllib, urllib2, math, re, cookielib
+from postsmth import postarticle, deletearticles
 #from pymmseg import mmseg
 
 #mmseg.dict_load_defaults()
@@ -75,6 +75,41 @@ f.close()
 
 # now do each job
 for board in jobs:
+    if board[0] == '#':
+        continue
+
+    # Remove old posts with no replies
+    tobedeleted = []
+
+    cj = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'), ('Referer', 'http://m.newsmth.net/'), ('Host', 'm.newsmth.net')]
+    urllib2.install_opener(opener)
+    req = urllib2.Request('http://m.newsmth.net/board/' + board)
+    conn = urllib2.urlopen(req)
+    content = conn.read()
+    soup = BeautifulSoup(content)
+    ul = soup.find('ul', {'class':'list sec'})
+    for li in ul.findAll('li'):
+      s = str(li)
+      if s.find('<a href="/user/query/CAQ9">CAQ9</a>|') <= 0:
+          continue
+      m = re.search('<a href="/article/' + board + '/([0-9]+)">(.*?)</a>\\(([0-9]+)\\)</div><div>([0-9\\-]+)', s, re.U)
+      if m is not None:
+          articleid = m.group(1)
+          title = m.group(2)
+          replies = m.group(3)
+          postdate = m.group(4)
+          if title.find('[新闻] ') != 0:
+              continue
+          # A news article
+          if replies != '0':
+              continue
+          # No repiles
+          tobedeleted.append(articleid)
+    deletearticles(board, tobedeleted)
+
+
     lasttimestamp = jobs[board][1]
     jobkeywords = jobs[board][0].strip().split('\t')
 
@@ -141,14 +176,26 @@ for board in jobs:
         if len(text) > 0:
             poststr += text + '\n\n'
 
+    if poststr.find(u'搜狗搜索提醒您：') >= 0 and poststr.find(u'该页面可能已被非法篡改，存在安全隐患，请慎重操作！') >= 0:
+        poststr = poststr.replace(u'搜狗搜索提醒您：', '')
+        poststr = poststr.replace(u'该页面可能已被非法篡改，存在安全隐患，请慎重操作！', '')
+        poststr = poststr.replace(u'如需继续访问该页面，请点击下面链接：', '')
+        poststr = poststr.replace(u'访问原网页', '请点击链接查看原文哦')
+    poststr = poststr.replace(u'搜狗已将原网页转码以便于移动设备浏览', '')
+    poststr = poststr.replace(u'返回搜索结果页 \- 搜狗新闻 \- 搜狗首页', '')
+    poststr = poststr.replace(u'原网页 \- 意见反馈', '')
+    poststr = poststr.replace(u'(点击图片看大图)', u'(原文这里有图片哦)')
+    poststr = re.sub(u'\n\\*\\*1.*?尾页\n', '', poststr)
+
     # remove the bottom part
-    for adsstr in [u'\n## 热门推荐\n', u'\n## 相关搜索\n', u'\n相关阅读\n']:
+    #for adsstr in [u'\n## 热门推荐\n', u'\n## 相关搜索\n', u'\n相关阅读\n']:
+    for adsstr in [u'\n### 相关新闻\n', u'\n相关推荐\n']:
         adspos = poststr.rfind(adsstr)
         if adspos > 0:
             #print 'Found', adsstr.strip()
             poststr = poststr[0 : adspos]
 
-    if postarticle(board, title, linkinfo[0], poststr):
+    if postarticle(board, '[新闻] ' + title, linkinfo[0], poststr):
         # then update the lasttimestamp
         jobs[board][1] = mintimestamp
 

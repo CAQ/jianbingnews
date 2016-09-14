@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import urllib, urlparse
 import time
 
-keywords = ['煎饼', '清华 计算机系', '清华 深研院']
+keywords = ['古典音乐']
 
 # read the previous links
 # format of the lines: <keyword> \t <original link> \t <timestamp> \t <sogou wap link> \t <article title> \t <posted>
@@ -31,7 +31,7 @@ for keyword in keywords:
     # if the news is new, store it
     fw = open('links.txt', 'a')
 
-    for item in soup.find_all('div', class_='list-item'):
+    for item in soup.find_all('div', {'class':'list-item'}):
         waplink = base + item.find('a').get('href')
         querystr = urlparse.urlparse(waplink).query
         query = urlparse.parse_qs(querystr)
